@@ -22,26 +22,40 @@ const PromptImprover = () => {
 
     setIsLoading(true);
     try {
-      // For this demo, we'll simulate an API call with a timeout
+      // For this demo, we'll simulate an AI improvement with some common enhancement patterns
       await new Promise((resolve) => setTimeout(resolve, 1500));
       
-      // This is a simple improvement logic - in a real app, you'd call an AI API
-      const improved = prompt
-        .trim()
-        .split(" ")
-        .filter(word => word.length > 0)
-        .join(" ");
+      let improved = prompt.trim();
       
-      const suggestions = [
-        "Added more specific details",
-        "Improved clarity and structure",
-        "Enhanced natural language flow",
-      ];
+      // Add more specific details
+      if (!improved.includes("detailed")) {
+        improved = "Create a detailed " + improved;
+      }
+      
+      // Add quality expectations
+      if (!improved.toLowerCase().includes("high quality")) {
+        improved += ", ensuring high quality output";
+      }
+      
+      // Add style guidance if not present
+      if (!improved.includes("style")) {
+        improved += ", maintaining a professional and engaging style";
+      }
+      
+      // Add clarity about format if not specified
+      if (!improved.includes("format")) {
+        improved += ". Present the information in a clear, well-structured format";
+      }
+      
+      // Add request for examples if appropriate
+      if (!improved.includes("example")) {
+        improved += ", including relevant examples where appropriate";
+      }
       
       setImprovedPrompt(improved);
       toast({
         title: "Prompt improved!",
-        description: "Your prompt has been enhanced with AI suggestions.",
+        description: "Your prompt has been enhanced with more specific details and clarity.",
       });
     } catch (error) {
       toast({
