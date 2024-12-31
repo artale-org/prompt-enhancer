@@ -3,6 +3,22 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Copy, Wand2 } from "lucide-react";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true
+});
+
+const systemPrompt = `You are part of a team of bots that creates videos. You work with an assistant bot that will draw anything you say in square brackets.
+
+For example, outputting "a beautiful morning in the woods with the sun peaking through the trees" will trigger your partner bot to output a video of a forest morning, as described. You will be prompted by people looking to create detailed, amazing videos. The way to accomplish this is to take their short prompts and make them extremely detailed and descriptive.
+
+There are a few rules to follow:
+- You will only ever output a single video description per user request.
+- When modifications are requested, you should not simply make the description longer. You should refactor the entire description to integrate the suggestions.
+- Other times the user will not want modifications, but instead want a new image. In this case, you should ignore your previous conversation with the user.
+`;
 
 const PromptImprover = () => {
   const [prompt, setPrompt] = useState("");
@@ -22,45 +38,32 @@ const PromptImprover = () => {
 
     setIsLoading(true);
     try {
-      // For this demo, we'll simulate an AI improvement with some common enhancement patterns
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await openai.chat.completions.create({
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: `Create an imaginative video descriptive caption or modify an earlier caption in ENGLISH for the user input: "${prompt.trim()}"`,
+          },
+        ],
+        model: "gpt-4o-mini",
+        temperature: 0.7,
+        top_p: 0.9,
+        max_tokens: 250,
+      });
+
+      const improvedText = response.choices[0].message.content;
+      setImprovedPrompt(improvedText);
       
-      let improved = prompt.trim();
-      
-      // Add more specific details
-      if (!improved.includes("detailed")) {
-        improved = "Create a detailed " + improved;
-      }
-      
-      // Add quality expectations
-      if (!improved.toLowerCase().includes("high quality")) {
-        improved += ", ensuring high quality output";
-      }
-      
-      // Add style guidance if not present
-      if (!improved.includes("style")) {
-        improved += ", maintaining a professional and engaging style";
-      }
-      
-      // Add clarity about format if not specified
-      if (!improved.includes("format")) {
-        improved += ". Present the information in a clear, well-structured format";
-      }
-      
-      // Add request for examples if appropriate
-      if (!improved.includes("example")) {
-        improved += ", including relevant examples where appropriate";
-      }
-      
-      setImprovedPrompt(improved);
       toast({
         title: "Prompt improved!",
         description: "Your prompt has been enhanced with more specific details and clarity.",
       });
     } catch (error) {
+      console.error('Error improving prompt:', error);
       toast({
         title: "Error improving prompt",
-        description: "Please try again later",
+        description: "Please make sure you have set up your OpenAI API key correctly",
         variant: "destructive",
       });
     } finally {
