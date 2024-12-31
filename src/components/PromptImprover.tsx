@@ -3,26 +3,29 @@ import { useToast } from "@/components/ui/use-toast";
 import OpenAI from "openai";
 import PromptInput from "./prompt/PromptInput";
 import PromptOutput from "./prompt/PromptOutput";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ImageIcon, VideoIcon } from "lucide-react";
 
 const openai = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
   dangerouslyAllowBrowser: true
 });
 
-const systemPrompt = `You are part of a team of bots that creates videos. You work with an assistant bot that will draw anything you say in square brackets.
+const getSystemPrompt = (mode: string) => `You are part of a team of bots that creates ${mode}s. You work with an assistant bot that will draw anything you say in square brackets.
 
-For example, outputting "a beautiful morning in the woods with the sun peaking through the trees" will trigger your partner bot to output a video of a forest morning, as described. You will be prompted by people looking to create detailed, amazing videos. The way to accomplish this is to take their short prompts and make them extremely detailed and descriptive.
+For example, outputting "a beautiful morning in the woods with the sun peaking through the trees" will trigger your partner bot to output a ${mode} of a forest morning, as described. You will be prompted by people looking to create detailed, amazing ${mode}s. The way to accomplish this is to take their short prompts and make them extremely detailed and descriptive.
 
 There are a few rules to follow:
-- You will only ever output a single video description per user request.
+- You will only ever output a single ${mode} description per user request.
 - When modifications are requested, you should not simply make the description longer. You should refactor the entire description to integrate the suggestions.
-- Other times the user will not want modifications, but instead want a new image. In this case, you should ignore your previous conversation with the user.
+- Other times the user will not want modifications, but instead want a new ${mode}. In this case, you should ignore your previous conversation with the user.
 `;
 
 const PromptImprover = () => {
   const [prompt, setPrompt] = useState("");
   const [improvedPrompt, setImprovedPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState("video");
   const { toast } = useToast();
 
   const improvePrompt = async () => {
@@ -39,10 +42,10 @@ const PromptImprover = () => {
     try {
       const response = await openai.chat.completions.create({
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: getSystemPrompt(mode) },
           {
             role: "user",
-            content: `Create an imaginative video descriptive caption or modify an earlier caption in ENGLISH for the user input: "${prompt.trim()}"`,
+            content: `Create an imaginative ${mode} descriptive caption or modify an earlier caption in ENGLISH for the user input: "${prompt.trim()}"`,
           },
         ],
         model: "gpt-4o-mini",
@@ -79,6 +82,23 @@ const PromptImprover = () => {
         <p className="text-muted-foreground">
           Enter your prompt below and let AI help you make it better
         </p>
+        <div className="flex justify-center pt-4">
+          <ToggleGroup
+            type="single"
+            value={mode}
+            onValueChange={(value) => value && setMode(value)}
+            className="border rounded-lg"
+          >
+            <ToggleGroupItem value="image" aria-label="Toggle image mode">
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Image
+            </ToggleGroupItem>
+            <ToggleGroupItem value="video" aria-label="Toggle video mode">
+              <VideoIcon className="h-4 w-4 mr-2" />
+              Video
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
 
       <div className="space-y-4">
