@@ -1,3 +1,21 @@
+## usage 
+put OPENAI_KEY in .env, must with `VITE_` prefix:
+```
+VITE_OPENAI_API_KEY=***
+```
+
+launch:
+```
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
+```
+
+
+
+
 # Welcome to your Lovable project
 
 ## Project info
