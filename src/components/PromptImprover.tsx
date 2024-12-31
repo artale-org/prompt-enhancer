@@ -5,13 +5,15 @@ import PromptInput from "./prompt/PromptInput";
 import PromptOutput from "./prompt/PromptOutput";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ImageIcon, VideoIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const openai = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
   dangerouslyAllowBrowser: true
 });
 
-const getSystemPrompt = (mode: string) => `You are part of a team of bots that creates ${mode}s. You work with an assistant bot that will draw anything you say in square brackets.
+const defaultSystemPrompt = (mode: string) => `You are part of a team of bots that creates ${mode}s. You work with an assistant bot that will draw anything you say in square brackets.
 
 For example, outputting "a beautiful morning in the woods with the sun peaking through the trees" will trigger your partner bot to output a ${mode} of a forest morning, as described. You will be prompted by people looking to create detailed, amazing ${mode}s. The way to accomplish this is to take their short prompts and make them extremely detailed and descriptive.
 
@@ -26,6 +28,8 @@ const PromptImprover = () => {
   const [improvedPrompt, setImprovedPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState("video");
+  const [systemPrompt, setSystemPrompt] = useState(defaultSystemPrompt(mode));
+  const [maxTokens, setMaxTokens] = useState(250);
   const { toast } = useToast();
 
   const improvePrompt = async () => {
@@ -42,7 +46,7 @@ const PromptImprover = () => {
     try {
       const response = await openai.chat.completions.create({
         messages: [
-          { role: "system", content: getSystemPrompt(mode) },
+          { role: "system", content: systemPrompt },
           {
             role: "user",
             content: `Create an imaginative ${mode} descriptive caption or modify an earlier caption in ENGLISH for the user input: "${prompt.trim()}"`,
@@ -51,7 +55,7 @@ const PromptImprover = () => {
         model: "gpt-4o-mini",
         temperature: 0.7,
         top_p: 0.9,
-        max_tokens: 250,
+        max_tokens: maxTokens,
       });
 
       const improvedText = response.choices[0].message.content;
@@ -73,6 +77,13 @@ const PromptImprover = () => {
     }
   };
 
+  const handleModeChange = (value: string) => {
+    if (value) {
+      setMode(value);
+      setSystemPrompt(defaultSystemPrompt(value));
+    }
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto p-6 space-y-8">
       <div className="text-center space-y-2">
@@ -86,7 +97,7 @@ const PromptImprover = () => {
           <ToggleGroup
             type="single"
             value={mode}
-            onValueChange={(value) => value && setMode(value)}
+            onValueChange={handleModeChange}
             className="border rounded-lg"
           >
             <ToggleGroupItem value="image" aria-label="Toggle image mode">
@@ -102,6 +113,27 @@ const PromptImprover = () => {
       </div>
 
       <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">System Prompt</label>
+          <Textarea
+            value={systemPrompt}
+            onChange={(e) => setSystemPrompt(e.target.value)}
+            className="min-h-[200px] resize-none font-mono text-sm"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Max Tokens</label>
+          <Input
+            type="number"
+            value={maxTokens}
+            onChange={(e) => setMaxTokens(Number(e.target.value))}
+            min={1}
+            max={2000}
+            className="w-full"
+          />
+        </div>
+
         <PromptInput
           prompt={prompt}
           isLoading={isLoading}
