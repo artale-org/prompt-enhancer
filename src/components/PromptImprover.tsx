@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Copy, Wand2 } from "lucide-react";
 import OpenAI from "openai";
+import PromptInput from "./prompt/PromptInput";
+import PromptOutput from "./prompt/PromptOutput";
 
 const openai = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
@@ -71,22 +70,6 @@ const PromptImprover = () => {
     }
   };
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(improvedPrompt);
-      toast({
-        title: "Copied to clipboard!",
-        description: "You can now paste the improved prompt anywhere",
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to copy",
-        description: "Please try again",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="w-full max-w-3xl mx-auto p-6 space-y-8">
       <div className="text-center space-y-2">
@@ -99,58 +82,14 @@ const PromptImprover = () => {
       </div>
 
       <div className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Your Prompt</label>
-          <Textarea
-            placeholder="Enter your prompt here..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="min-h-[100px] resize-none"
-          />
-        </div>
+        <PromptInput
+          prompt={prompt}
+          isLoading={isLoading}
+          onPromptChange={setPrompt}
+          onImprove={improvePrompt}
+        />
 
-        <Button
-          onClick={improvePrompt}
-          className="w-full bg-brand-600 hover:bg-brand-700"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Improving...
-            </>
-          ) : (
-            <>
-              <Wand2 className="mr-2 h-4 w-4" />
-              Improve Prompt
-            </>
-          )}
-        </Button>
-
-        {improvedPrompt && (
-          <div className="space-y-2 animate-in fade-in-50">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Improved Version</label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={copyToClipboard}
-                className="h-8"
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Copy
-              </Button>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-brand-100/50 to-brand-200/50 rounded-lg" />
-              <Textarea
-                value={improvedPrompt}
-                readOnly
-                className="min-h-[100px] resize-none bg-transparent relative z-10"
-              />
-            </div>
-          </div>
-        )}
+        {improvedPrompt && <PromptOutput improvedPrompt={improvedPrompt} />}
       </div>
     </div>
   );
