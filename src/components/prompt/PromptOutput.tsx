@@ -45,7 +45,7 @@ const PromptOutput = ({ improvedPrompt }: PromptOutputProps) => {
         <Textarea
           value={improvedPrompt}
           readOnly
-          className="min-h-[100px] resize-none bg-transparent relative z-10"
+          className="min-h-[200px] resize-none bg-transparent relative z-10"
         />
       </div>
     </div>
